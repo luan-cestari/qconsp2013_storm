@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>QConSP 2013 - Criando aplicações mais rápidas e distribuídas com Storm</title>
+
+		<meta name="description" content="This is a small talk about Storm, a framework that make easier to build high parallel and distributed system. The presentation is using reveal.js + HTML5">
+		<meta name="author" content="Luan Cestari">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="stylesheets/reveal.min.css">
+		<link rel="stylesheet" href="stylesheets/theme/default.css" id="theme">
+
+		<link rel="stylesheet" href="stylesheets/zenburn.css">
+
+		<script>
+			document.write( '<link rel="stylesheet" href="stylesheets/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="javascripts/html5shiv.js"></script>
+		<![endif]-->
+
+	</head>
+
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					<section>
+						<h1>Storm!</h1>
+						<h3>QConSP 2013</h3>
+						<p>
+							<small>Created by <a href="http://superseniordevelopers.blogspot.com">Luan Cestari</a> / <a href="https://plus.google.com/108300913932349459095/about">G+</a>/ <a href="http://www.facebook.com/luan.cestari">Facebook</a>/ <a href="http://twitter.com/@BR_LuanCestari">@BR_LuanCestari</a></small>
+						</p>
+						<aside class="notes">
+							A tecla 's' e 'esc'  irá aparecer mais informações 
+							Agradeço a presença de todos presentes e online
+							Qualquer dúvida, só levantar a mão e perguntar, ou no final da apresentação ou mesmo online
+						</aside>
+					</section>
+					<section>
+						<h2>Luan = lambda nerd: nerd*nerd</h2>
+						<p class="fragment roll-in">^^^ Piadinhas vvv</p>
+						<img width="400" height="400" src="images/joke.jpg" alt="Piada Nerd" class="fragment roll-in"/>
+						<aside class="notes">
+							Piadinhas para quebrar o gelo =)
+						</aside>
+					</section>
+					<section>
+						<p>Da para usar as teclas 'ESC' ou  's' para navegar</p>
+					</section>
+					<section>
+						<h2>Agenda</h2>
+						<ul>
+							<li>Lambda Architecture</li>
+							<li>Storm</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Pontos-chave</h2>
+						<ul>
+							<li class="fragment highlight-blue">Low latency</li>
+							<li class="fragment highlight-green">Computação Distribuída e Paralela</li>
+						</ul>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Lambda Architecture</h2>
+					</section>
+					<section>
+						<h2>Historinha...</h2>
+						<p>O que acontece no desenvolvimento das aplicacoes cujo o uso é crescente</p>
+					</section>
+					<section>
+						<h2>O que acontece [0]</h2>
+						<img src="images/Drawing1.jpg" alt="Aplicação simple com Bando de Dados" class="fragment roll-in"/>
+					</section>
+					<section>
+						<h2>O que acontece [1]</h2>
+						<img src="images/Drawing2.jpg" alt="Aplicação simple com Bando de Dados e Fila" class="fragment roll-in"/>
+					</section>
+					<section>
+						<h2>O que acontece [last]</h2>
+						<img src="images/Drawing3.jpg" alt="Aplicação simple com Bando de Dados com sharding e Filas" class="fragment roll-in"/>
+						<aside class="notes">
+							Complexidade aumentando!
+							Necessidade de script para sharding/horizontal scaling
+							Para fazer scale fica ainda mais complexo, com altas chances de ocorrer falhas humanas
+							Mesmo crescendo dessa forma, ainda não tem arquitetura contra falhas (por exemplo um banco de dados fique fora do ar por falha de network ou disco)
+							Bugs: Se houver um erro em uma das aplicacoes, e para corrigir os dados em todas filas e shardes
+						</aside>
+					</section>
+					<section>
+						<h2>O que deu errado:</h2>
+						<ul>
+							<li>Complexidade cada vez maior no desenvolvimento</li>
+							<li>Fault-tolerance e High-Avalability são duvidosas</li>
+							<li>Muita dificuldade de escalabilidade e limitada</li>
+						</ul>
+						<aside class="notes">
+							Isso também se aplica tanto na manutenção (maior chances de ocorrer erros e consumir maior tempo); 
+							como no Fault como algo humana, como um bug ou outras falhas (sendo que backups poderiam não funcionar devido a complexidade, por exemplo) !
+							Scale vertically e scale horizontally
+							Computação na nuvens
+						</aside>
+					</section>
+					<section>
+						<h2>Case:Facebook</h2>
+						<ul class="fragment roll-in">
+							<li>+1 Billion users</li>
+							<li>+240 Billion photos</li>
+							<li>+1 Trillion connections</li>
+							<li>22% of references of the Internet</li>
+							<li class="fragment roll-in">2012: 300 milhões de uploads de imagens por dia</li>
+						</ul>
+						<aside class="notes">
+Harvard Business Review -> Mudança em um bank o processo batch de emprestimo (load) passou de 96 horas para 4. Ou de martketing q foi de 4.5h p 60 seconds; 2012 2.5 exabyte create a day (e dobra a cada 40 meses). Mais dados cruzam a internet a cada segundo de hj do que havia na internet inteira a 20 anos atras.
+Facebook: Our 1 billion users have uploaded 240 billion photos, made 1 trillion connections - http://thenextweb.com/facebook/2013/01/15/facebook-our-1-billion-users-have-uploaded-240-billion-photos-made-1-trillion-connections/
+Study: 22 Percent Of Web Pages Reference Facebook - http://allfacebook.com/study-zyxt-facebook-web-influence_b94096
+						</aside>
+					</section>
+					<section>
+						<h2>O que é Lambda Architecture</h2>
+					</section>
+					<section>
+						<h2>Batch Layer</h2>
+					</section>
+					<section>
+						<h2>Service Layer</h2>
+					</section>
+					<section>
+						<h2>Speed Layer</h2>
+						<aside class="notes">
+							O salvador! Faz o papel do Batch enquanto o mesmoa inda não processou as novas informações, possibilitando que
+						</aside>
+					</section>
+					<section>
+						<h2>Somando tudo!</h2>
+						<img src="images/Drawing4.jpg" alt="Diagrama resumindo o L.A." class="fragment roll-in"/>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>Storm</h2>
+					</section>
+					<section>
+						<h2>Características</h2>
+						<ul>
+							<li>Simple, Flexível e com suporte a diversas linguagens </li>
+							<li>Possui Fault-tolerance</li>
+							<li>Fácilmente escalável</li>
+							<li>Garantia de processamento</li>
+							<li>Transação</li>
+							<li>Rápido/Low latency</li>
+						</ul>
+						<aside class="notes">
+							Percebam que tudo que dava errado antes, podemos dizer que foi solucionado. O desenvolvimento agora não precisa se preocupar com regras de ambiente e sim com a regra de negócio
+							Rapido = resposta em menos de 10 milisegundos (ver http://www.slideshare.net/Attova/low-latency-frameworks )
+						</aside>
+					</section>
+					<section>
+						<h2>Use cases</h2>
+						<ul>
+							<li>Processamento Contínuo e sem burocracia</li>
+							<li>Processamento Distribuído e Paralelismo </li>
+						</ul>
+						<aside class="notes">
+							Para casos de atualizacoes continuas que precisam ser atualizadas e visualizadas em tempo real
+							Burocracia = Geralmente pessoal usa Filas, mas tendo que se preocupar demasiadamente com elas
+							Uso intesivo de CPU
+						</aside>
+					</section>
+					<section>
+						<h2>Evolução</h2>
+						<ul>
+							<li>09/2011 virou Open Source </li>
+							<li>12/2011 v0.6.0, agora usando Kryo</li>
+							<li>02/2012 v0.7.0, transactional topologies</li>
+							<li>08/2012 v0.8.0, LMAX Disruptor</li>
+							<li>??/2013 v0.9.0-wip17 </li>
+						</ul>
+						<aside class="notes">
+							Desempenho 5-10x maior que antes ( na 0.8.0)
+							Storm fez 1M tuples/seg/node no cluster do Twitter
+						</aside>
+					</section>
+					<section>
+						<h2>O que mais ele usa</h2>
+						<ul>
+							<li>ZeroMQ</li>
+							<li>Zookeeper</li>
+							<li>Thrift</li>
+						</ul>
+						<aside class="notes">
+							0MQ = framework de comunicacao e concorrencia para cluster e supercomputadores. Usa Asychroonous IO e etc
+							Zookeeper = Usado para cordenardo e descobrir novos slaves no cluster, alem de ajudar para que nao haja single point failure, os estados do Nimbus e do Supervisors ficam nele (ou em disco)
+							Thrift = Para gerar um framework agnostico de linguagem
+						</aside>
+					</section>
+					<section>
+						<h2>Arquitetura</h2>
+						<img src="images/Drawing5.jpg" alt="Diagrama de implantacao" class="fragment roll-in"/>
+					</section>
+					<section>
+						<h2>Modelo de desenvolvimento</h2>
+						<img src="images/Drawing6.jpg" alt="Diagrama resumindo de componentes para o desenvolvimento" class="fragment roll-in"/>
+					</section>
+					<section>
+						<h2>Desenvolvimento</h2>
+						<ul>
+							<li>Mutiplas linguagens</li>
+							<ul>
+								<li>Clojure</li>
+								<li>Java</li>
+								<li>Ruby (redstorm)</li>
+							</ul>
+							<li>LocalCluster e StormSubmitter</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Demo</h2>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h1>THE END</h1>
+						<h3>BY Luan Cestari</h3>
+						<p>http://www.ourdailycodes.com/</p>
+						<p>http://superseniordevelopers.blogspot.com.br/</p>
+					</section>
+					<section>
+						<h2>Perguntas?</h2>
+					</section>
+					<section>
+						<h2>Livros de ref.</h2>
+						<p>Big Data = http://www.manning.com/marz/</p>
+						<p>Storm = http://shop.oreilly.com/product/0636920024835.do</p>
+					</section>
+				</section>
+
+			</div>
+
+		</div>
+
+		<script src="javascripts/head.min.js"></script>
+		<script src="javascripts/reveal.min.js"></script>
+
+		<script>
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+				autoSlide: 10*60*1000,
+				theme: Reveal.getQueryHash().theme , // Sky Beige Simple Serif Night /css/theme
+				transition: Reveal.getQueryHash().transition || 'cube', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/showdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+					// { src: 'plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+		<div class="share-reveal" style="display: none; position: absolute; bottom: 10px; left: 50%; margin-left: -305px; z-index: 20;">
+			<a href="http://twitter.com/share" class="twitter-share-button" data-text="#TDC2013 - São Paulo - Storm! - @BR_LuanCestari" data-url="http://luan-cestari.github.io/tdc2013_storm/?print-pdf#/" data-count="small" data-related="Luan Cestari"></a>
+
+			<iframe id="facebook-button" src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Fluan-cestari.github.io%2Ftdc2013_storm%2F%3Fprint-pdf%23%2F&layout=button_count&show_faces=false&width=93&action=like&font=arial&colorscheme=light&height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:85px; height:24px; position: relative; top: 4px;" allowTransparency="true"></iframe>
+			<a style="font-size: 150%;text-decoration: none;color: #e7ad52; font-family: 'Helvetica Neue', Arial, sans-serif; border:none; overflow:hidden; width:85px; position: relative; top: -4px;" href="http://bit.ly/15aNaQj">http://bit.ly/15aNaQj</a>
+			<a href="https://twitter.com/BR_LuanCestari" class="twitter-follow-button" data-show-count="false" data-dnt="true">Follow @BR_LuanCestari</a>
+		</div>
+
+		<a class="fork-reveal" style="display: none;" href="https://github.com/luan-cestari/tdc2013_storm"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://a248.e.akamai.net/camo.github.com/e6bef7a091f5f3138b8cd40bc3e114258dd68ddf/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub"></a>
+
+<script>
+/* <![CDATA[ */
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-39948933-', 'github.io');
+  ga('send', 'pageview');
+/* ]]> */
+</script>
+
+		<script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+
+		<script>
+			if( !navigator.userAgent.match( /iphone|ipod|android|ipad|blackberry/gi ) && !!document.querySelector ) {
+				document.querySelector( '.share-reveal' ).style.display = 'block';
+				document.querySelector( '.fork-reveal' ).style.display = 'block';
+			}
+		</script>
+
+	</body>
+</html>
+
